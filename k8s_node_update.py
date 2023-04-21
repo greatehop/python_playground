@@ -10,6 +10,7 @@ import logging
 """
 Algorithm:
     * disable cluster-autoscaler
+    * # TODO: if there is no running instances at ASG - just update LT and skip the rest
     * create new version for worker Launch Template with new AMI
     * get current k8s nodes (old_nodes) and kubectl taint (old_nodes) # TODO: use cordon instead of taint
     * double scale up ASG and enable scale-in protection for all instances
