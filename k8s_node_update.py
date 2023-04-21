@@ -11,7 +11,7 @@ import logging
 Algorithm:
     * disable cluster-autoscaler
     * create new version for worker Launch Template with new AMI
-    * get current k8s nodes (old_nodes) and kubectl taint (old_nodes)
+    * get current k8s nodes (old_nodes) and kubectl taint (old_nodes) # TODO: use cordon instead of taint
     * double scale up ASG and enable scale-in protection for all instances
     * to be sure that new k8s nodes are ready (timeout 5 minutes)
     * check jobs pods on old k8s nodes are exist in specific namespace
@@ -50,12 +50,6 @@ def auth():
         DurationSeconds=60 * 60 * 4,  # no less than timeout job + packer build ~1 hour
         RoleSessionName="redeploy")
     credentials = assumed_role_object['Credentials']
-    # env vars for binary executions
-    os.environ["AWS_ACCESS_KEY_ID"] = credentials['AccessKeyId']
-    os.environ["AWS_SECRET_ACCESS_KEY"] = credentials['SecretAccessKey']
-    os.environ["AWS_DEFAULT_REGION"] = REGION
-    os.environ["AWS_SESSION_TOKEN"] = credentials['SessionToken']
-
     config = {
         'region_name': REGION,
         'aws_access_key_id': credentials['AccessKeyId'],
@@ -64,6 +58,13 @@ def auth():
     ec2_client = boto3.client('ec2', **config)
     asg_client = boto3.client('autoscaling', **config)
 
+    # TODO: get rid
+    # env vars for binary executions
+    os.environ["AWS_ACCESS_KEY_ID"] = credentials['AccessKeyId']
+    os.environ["AWS_SECRET_ACCESS_KEY"] = credentials['SecretAccessKey']
+    os.environ["AWS_DEFAULT_REGION"] = REGION
+    os.environ["AWS_SESSION_TOKEN"] = credentials['SessionToken']
+      
     return {'ec2': ec2_client, 'asg': asg_client, 'sts': sts_client}
 
 
