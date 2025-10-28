@@ -1,9 +1,7 @@
 name: Build and Deploy
 
-on:
-  push:
-    branches: [feature/cicd]
-
+on: workflow_dispatch
+  
 env:
   IMAGE_TAG: ${{ github.sha }}
   APP_PATH: helm-charts/microservices/cate-finetune/values-dev.yaml
