@@ -1,0 +1,43 @@
+name: Build and Deploy
+
+on:
+  push:
+    branches: [feature/cicd]
+
+env:
+  IMAGE_TAG: ${{ github.sha }}
+  APP_PATH: helm-charts/microservices/cate-finetune/values-dev.yaml
+
+permissions:
+  id-token: write
+  contents: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/create-github-app-token@v2
+        id: app-token
+        with:
+          app-id: ${{ vars.ARGOCD_APP_ID }}
+          private-key: ${{ secrets.ARGOCD_APP_KEY }}
+          owner: ${{ github.repository_owner }}
+
+      - uses: actions/checkout@v5
+        with:
+          repository: "${{ github.repository_owner }}/${{ vars.ARGOCD_REPO_NAME }}"
+          token: ${{ steps.app-token.outputs.token }}
+          persist-credentials: false
+
+      - name: Update image tag
+        uses: mikefarah/yq@master
+        with:
+          cmd: yq '.image.tag = env(IMAGE_TAG)' -i $APP_PATH
+      
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add $APP_PATH
+          git commit -m "Update image tag to $IMAGE_TAG"
+          git push
